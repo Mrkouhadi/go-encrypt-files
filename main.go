@@ -7,7 +7,9 @@ import (
 	"github.com/mrkouhadi/go-encrypt-files/filecrypt"
 )
 
-// running command: go run . encrypt ./static/file.txt
+// running command: 
+// go run . encrypt ./static/file.txt
+// go run . encrypt ./static/me.jpg
 func main() {
 	fmt.Println("######################## EBCRYPTING AND DECRYPTING of FILES! ########################")
 	if len(os.Args) < 2 {

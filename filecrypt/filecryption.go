@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 
@@ -17,21 +18,22 @@ func Encrypt(source string, password []byte) {
 	if _, err := os.Stat(source); os.IsNotExist(err) {
 		panic(err.Error())
 	}
-	srcFile, err := os.Open(source)
+	// allow us to open the file
+	err := os.Chmod(source, 0777)
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err)
 	}
-	defer srcFile.Close()
-	plainText, err := io.ReadAll(srcFile)
+	// read whts in the file
+	plainText, err := os.ReadFile(source)
 	if err != nil {
 		panic(err.Error())
 	}
 	key := password
-	noce := make([]byte, 12) // [0,0,0,0,0,....]
-	if _, err := io.ReadFull(rand.Reader, noce); err != nil {
+	nonce := make([]byte, 12) // [0,0,0,0,0,....]
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		panic(err.Error())
 	}
-	dk := pbkdf2.Key(key, noce, 4096, 32, sha1.New)
+	dk := pbkdf2.Key(key, nonce, 4096, 32, sha1.New)
 	block, err := aes.NewCipher(dk)
 	if err != nil {
 		panic(err.Error())
@@ -40,8 +42,8 @@ func Encrypt(source string, password []byte) {
 	if err != nil {
 		panic(err.Error())
 	}
-	cipherTxt := aesgcm.Seal(nil, noce, plainText, nil)
-	cipherTxt = append(cipherTxt, noce...)
+	cipherTxt := aesgcm.Seal(nil, nonce, plainText, nil)
+	cipherTxt = append(cipherTxt, nonce...)
 	destinationFile, err := os.Create(source)
 	if err != nil {
 		panic(err.Error())
